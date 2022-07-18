@@ -1,10 +1,11 @@
 import {useHttp} from '../../hooks/http.hook';
 import { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import {heroDeleteFromArray, heroesFetching, heroesFetched, heroesFetchingError , filterHeroFromArray} from '../../actions';
+import {changeHeroFetch , heroDeleteFromArray, heroesFetching, heroesFetched, heroesFetchingError , filterHeroFromArray} from '../../actions';
 import HeroesListItem from "../heroesListItem/HeroesListItem";
 import Spinner from '../spinner/Spinner';
 import { useCallback } from 'react';
+// import { useState } from 'react';
 // import { Transition } from "react-transition-group";
 
 
@@ -14,37 +15,16 @@ import { useCallback } from 'react';
 // Удаление идет и с json файла при помощи метода DELETE
 
 const HeroesList = () => {
-    const {heroes, heroesLoadingStatus , filters} = useSelector(state => state);
+    const {heroes, heroesLoadingStatus , filters , heroChange} = useSelector(state => state);
     const dispatch = useDispatch();
     const {request} = useHttp();
+    // const [heroChange , setHeroChange] = useState(false)
 
-
-    // const duration = 300;
-
-    // const defaultStyle = {
-    //   transition: `opacity ${duration}ms ease-in-out`,
-    //   opacity: 0,
-    // }
-    
-    // const transitionStyles = {
-    //   entering: { opacity: 1 },
-    //   entered:  { opacity: 1 },
-    //   exiting:  { opacity: 0 },
-    //   exited:  { opacity: 0 },
-    // };
-
-
-
-    const deleteHero = useCallback((id)=> { 
-        dispatch(heroDeleteFromArray(id))
-    }, [])
-
-    // const fetchDeleteHero = useCallback((id)=>{ 
-    //     request(`http://localhost:3001/heroes/${id}` , "DELETE" , {"id": 1,
-    //     "name": "Первый герой",
-    //     "description": "Первый герой в рейтинге!",
-    //     "element": "fire"})
-    // },[])
+    const fetchDeleteHero = useCallback((id)=>{ 
+        request(`http://localhost:3001/heroes/${id}` , "DELETE");
+        dispatch(changeHeroFetch())
+        // setHeroChange((heroChange)=>(!heroChange));
+    },[])
 
 
     useEffect(() => {
@@ -54,6 +34,15 @@ const HeroesList = () => {
             .then(()=>dispatch(filterHeroFromArray(null)))
             .catch(() => dispatch(heroesFetchingError()))
     }, []);
+
+    
+    useEffect(() => {
+        request("http://localhost:3001/heroes")
+            .then(data => dispatch(heroesFetched(data)))
+            .then(()=>dispatch(filterHeroFromArray(null)))
+            .catch(() => dispatch(heroesFetchingError()))
+    }, [heroChange]);
+
 
     if (heroesLoadingStatus === "loading") {
         return <Spinner/>;
@@ -74,7 +63,7 @@ const HeroesList = () => {
         // })
 
         return arr.map(({id, ...props}) => {
-            return <HeroesListItem key={id} {...props} deleteHero={()=>{deleteHero(id)}}/>
+            return <HeroesListItem key={id} {...props} deleteHero={()=>{fetchDeleteHero(id)}} />
         })
     }
 

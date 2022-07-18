@@ -31,3 +31,7 @@ export const filterHeroFromArray = (element)=>({
     type: 'HERO_FILTER', 
     payload: element
 })
+
+export const changeHeroFetch =()=>({
+    type: 'HERO_CHANGE_FETCH'
+})

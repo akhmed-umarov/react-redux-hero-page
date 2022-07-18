@@ -1,6 +1,7 @@
-import { useDispatch } from "react-redux";
-import { useState } from "react";
-import { addHeroFromArray } from "../../actions";
+import { useDispatch , useSelector} from "react-redux";
+import { useState , useCallback } from "react";
+import { addHeroFromArray , changeHeroFetch } from "../../actions";
+import {useHttp} from "../../hooks/http.hook.js";
 import {v4 as uuidv4} from 'uuid';
 
 // Задача для этого компонента:
@@ -14,19 +15,39 @@ import {v4 as uuidv4} from 'uuid';
 // данных из фильтров
 
 const HeroesAddForm = () => {
-    const [name , setName] = useState();
+    const [name , setName] = useState('');
     const [description , setDescription] = useState('');
     const [element , setElement] = useState('')
     const id = uuidv4();
     const dispatch = useDispatch();
+    const {request} = useHttp();
 
-    const addHero = ()=>{ 
-        dispatch(addHeroFromArray({name , description , element , id}))
+    // const {heroChange} = useSelector(state => state);
+
+    const obnul = ()=>{
         setName(''); 
         setDescription(''); 
         document.getElementById('element').value = "Я владею элементом...";
         setElement('')
     }
+
+
+    const fetchAddHero = useCallback((newHero)=>{ 
+        
+        // request(`http://localhost:3001/heroes/${1}` , "PATCH" , newHero)
+        console.log(newHero);
+        request(`http://localhost:3001/heroes/` , "POST" , JSON.stringify(newHero))
+        dispatch(changeHeroFetch());
+        obnul()
+        // setHeroChange((heroChange)=>(!heroChange));
+    },[])
+
+
+    // const addHero = ()=>{ 
+    //     dispatch(addHeroFromArray({name , description , element , id}))
+    //     obnul()
+    // }
+
 
     return (
         <form className="border p-4 shadow-lg rounded" >
@@ -78,10 +99,17 @@ const HeroesAddForm = () => {
                 </select>
             </div>
 
-            <button type="submit" className="btn btn-primary"
+            {/* <button type="submit" className="btn btn-primary"
             onClick={(e)=>{
                 e.preventDefault()
                 addHero()}}
+            >Создать</button> */}
+            <button type="submit" className="btn btn-primary"
+            onClick={(e)=>{
+                e.preventDefault()
+                fetchAddHero({ 
+                    id , name , description , element
+                })}}
             >Создать</button>
         </form>
     )

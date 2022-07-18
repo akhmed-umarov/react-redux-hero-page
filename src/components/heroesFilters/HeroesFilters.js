@@ -2,6 +2,7 @@ import { useDispatch } from "react-redux";
 import { filterHeroFromArray } from "../../actions";
 import { useState , useEffect } from "react";
 import { useSelector } from "react-redux";
+import { useHttp } from "../../hooks/http.hook";
 // Задача для этого компонента:
 // Фильтры должны формироваться на основании загруженных данных
 // Фильтры должны отображать только нужных героев при выборе
@@ -10,8 +11,9 @@ import { useSelector } from "react-redux";
 // Представьте, что вы попросили бэкенд-разработчика об этом
 
 const HeroesFilters = () => {
-
-    const [elem , setElem] = useState(null);
+    const [filters , setFilters] = useState([])
+    const {request} = useHttp()
+    const [elem , setElem] = useState('all');
     const heroes = useSelector(state=>state.heroes)
     const dispatch = useDispatch();
 
@@ -24,20 +26,42 @@ const HeroesFilters = () => {
     dispatch(filterHeroFromArray(elem))
     }, [heroes])
     
-    // const styleClassBtn = (e , style)=>{ 
-    //     return `${style} ${e.target.value==elem ? 'active' : null}`
-    // }
+
+    useEffect(()=>{ 
+        request('http://localhost:3001/filters/')
+            .then(data=> {
+                const filters = data.map((el , index)=>{
+                    let classStyle = (i)=>{ 
+                        if (i===0){
+                          return  'btn btn-outline-dark'
+                        } 
+                        else if (i===1){
+                           return  "btn btn-danger"
+                        } 
+                       else  if (i===2){
+                           return "btn btn-primary"
+                       }
+                        else if (i===3){
+                           return "btn btn-success"
+                        }
+                       else  if (i===4){
+                           return "btn btn-secondary"
+                       }
+                    }
+                    return <button key={index} onClick={heroFilter} value={el} className={`${classStyle(index)} ${el === elem ? 'active' : null}`}>{el}</button>
+            })
+                setFilters(filters)
+            })
+    } , [])
+        
+
 
     return (
         <div className="card shadow-lg mt-4">
             <div className="card-body">
                 <p className="card-text">Отфильтруйте героев по элементам</p>
                 <div className="btn-group">
-                    <button onClick={heroFilter} value={null} className={`btn btn-outline-dark ${'' === elem ? 'active' : null}`}>Все</button>
-                    <button onClick={heroFilter} value={'fire'} className={`btn btn-danger ${'fire' == elem ? 'active' : null}`} >Огонь</button>
-                    <button onClick={heroFilter} value={'water'} className={`btn btn-primary ${'water' == elem ? 'active' : null}`}>Вода</button>
-                    <button onClick={heroFilter} value={'wind'} className={`btn btn-success ${'wind'== elem ? 'active' : null}`}>Ветер</button>
-                    <button onClick={heroFilter} value={'earth'} className={`btn btn-secondary ${'earth' == elem ? 'active' : null}`}>Земля</button>
+                    {filters}
                 </div>
             </div>
         </div>
